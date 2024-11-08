@@ -33,7 +33,7 @@ Cuda 버전: 11.1\
 Torch 버전: 1.8.1\
 Torchvision 버전: 0.9.1
 
-실행 절차:\
+실행 절차:
 1. 도커를 킨다.\
 docker start difnet11.1[지정한 도커의 이름]\
 docker attach difnet11.1[지정한 도커의 이름]\
