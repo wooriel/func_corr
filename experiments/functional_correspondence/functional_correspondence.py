@@ -276,7 +276,7 @@ def test(with_geodesic_error=False):
                         print("1-1) Injective Correspondence Saved on {}".format(t_inj_path))
 
                     # 1-2) Save bijective correspondence
-                    if fidx == -1:
+                    if fidx == 0:
                         print("1-2) Saving Bijective Correspondence...")
                         # print(shape1[0].size(0))
                         # print(shape2[0].size(0))
