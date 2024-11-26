@@ -397,6 +397,7 @@ def compute_operators(verts, faces, k_eig, normals=None):
 
 
 def get_all_operators(verts_list, faces_list, k_eig, op_cache_dir=None, normals=None):
+# def get_all_operators(verts_list, faces_list, k_eig, fname, op_cache_dir=None, normals=None):
     N = len(verts_list)
             
     frames = [None] * N
@@ -413,6 +414,7 @@ def get_all_operators(verts_list, faces_list, k_eig, op_cache_dir=None, normals=
    
     for num, i in enumerate(inds):
         print("get_all_operators() processing {} / {} {:.3f}%".format(num, N, num / N * 100))
+        # print("get_all_operators() {} processing {} / {} {:.3f}%".format(fname[i], num, N, num / N * 100))
         if normals is None:
             outputs = get_operators(verts_list[i], faces_list[i], k_eig, op_cache_dir)
         else:
@@ -901,13 +903,21 @@ def get_all_pairs_geodesic_distance(verts_np, faces_np, geodesic_cache_dir=None)
 
 
 def all_unique(bij, k):
-    non_dup = torch.arange(k).to(device=bij.device)
+    # non_dup = torch.arange(k).to(device=bij.device) 1
+    vis = set() # 2
     sorted_bij, _ = torch.sort(bij)
+    print(sorted_bij[0])
     flag = True
     for i in range(k):
-        if sorted_bij[i] not in non_dup:
+        # if sorted_bij[i] not in non_dup: 1
+        cur = sorted_bij[i]
+        # if cur not in vis and cur < i: # k밖의 index도 count할때 -> 매핑 안됨 2
+        if cur < i or cur in vis: # index범위가 항상 k안일때
             flag = False
-            print("{} {}".format(non_dup[i], sorted_bij[i]))
+            # print("{} {}".format(non_dup[i], sorted_bij[i]))
+        else:
+            vis.add(sorted_bij[i])
+            # print(cur, end=" ")
         # else:
         #     print(i, end=" ")
 
@@ -950,7 +960,9 @@ def find_bij_knn(points_source, points_target, k, largest=False, omit_diagonal=F
         #         print("{}: PASS".format(i))
 
         r_visited = set()
-        bij = torch.zeros(k)
+        # bij = torch.zeros(k)
+        # print(k)
+        bij = torch.full(size=(k, ), fill_value=-1)
         bij_dist = torch.zeros(k)
         for i in tqdm([_n for _n in range(k)]):
             # visited_idx keeps track of duplicate elem on current top-k
@@ -958,7 +970,7 @@ def find_bij_knn(points_source, points_target, k, largest=False, omit_diagonal=F
             for j in range(k):
                 cur_dist = float(trans_dist[i, j])
                 cur_idx = int(trans_idx[i, j]) # int로 안바꿔주면 같은 숫자가 별개의 tensor값으로 인식
-                if cur_idx not in r_visited:
+                if cur_idx not in r_visited and cur_idx < k: # elem < k for unmaching index
                     visited_idx[cur_idx].append((cur_dist, j))
 
             _key = list(visited_idx.keys()) # idx들임
@@ -967,11 +979,11 @@ def find_bij_knn(points_source, points_target, k, largest=False, omit_diagonal=F
             for elem in _key: # elem is the index
                 # 해당 top-k에 하나의 elem만 있으면 bij에 추가
                 elem = int(elem)
-                if elem not in r_visited:
+                if elem not in r_visited and elem < k: # elem < k for unmaching index
                     if len(visited_idx[elem]) == 1:
                         # print("dists for index {}: {}".format(elem, visited_idx[elem]))
                         cur = visited_idx[elem][0]
-                        if bij[cur[1]] == 0:
+                        if bij[cur[1]] == -1:
                             bij[cur[1]] = elem
                             bij_dist[cur[1]] = cur[0]
                             r_visited.add(elem)
@@ -982,7 +994,7 @@ def find_bij_knn(points_source, points_target, k, largest=False, omit_diagonal=F
                         # print("dists for index {}: {}".format(elem, visited_idx[elem]))
                         for m in range(len(visited_idx[elem])):
                             cur = visited_idx[elem][m]
-                            if bij[cur[1]] == 0: 
+                            if bij[cur[1]] == -1: 
                                 # 3
                                 # print("before bij[{}]: {} ".format(cur[1], bij[cur[1]]), end='')
                                 bij[cur[1]] = elem
@@ -994,7 +1006,7 @@ def find_bij_knn(points_source, points_target, k, largest=False, omit_diagonal=F
             # print("bij top{}: {}".format(i, bij))
 
             if len(r_visited) >= k:
-                print("bijective correspondence search finished at top{}".format(i))
+                # print("bijective correspondence search finished at top{}".format(i))
                 # print("{} >= {}".format(len(r_visited), k))
                 break
         

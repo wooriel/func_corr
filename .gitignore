@@ -11,7 +11,8 @@ __pycache__/
 test/*.obj
 test/*.ply
 experiments/functional_correspondence/test/
-experiments/data/
+experiments/data/psb/off_2_not_used/
+experiments/data/psb/corres_not_used/
 
 # Editor and OS things
 imgui.ini
