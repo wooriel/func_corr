@@ -15,7 +15,8 @@ import diffusion_net
 from diffusion_net.utils import toNP
 
 class PSBTestDataset(Dataset):
-    def __init__(self, root_dir, name="psb", n_trial=10, k_eig=128, n_fmap=30, use_cache=True, op_cache_dir=None):
+    def __init__(self, root_dir, name="psb", k_eig=128, n_fmap=30, use_cache=True, op_cache_dir=None):
+    # def __init__(self, root_dir, name="psb", n_trial=10, k_eig=128, n_fmap=30, use_cache=True, op_cache_dir=None):
 
         # NOTE: These datasets are setup such that each dataset object always loads the entire dataset regardless of train/test mode. The correspondence pair combinations are then set such that the train dataset only returns train pairs, and the test dataset only returns test pairs. Be aware of this if you try to adapt the code for any other purpose!
 
@@ -30,19 +31,32 @@ class PSBTestDataset(Dataset):
         # store in memory
         self.verts_list = []
         self.faces_list = []
-        self.vts_list = []
+        # self.vts_list = []
         self.names_list = []
 
         # set combinations
-        n_train = {'psb':210}[self.name]
+        n_train = {'psb': 200}[self.name]
         # if self.train:
         #     self.combinations = list(permutations(range(n_train), 2))
         #     self.idx = list(range(n_train))
         # else:
         #     self.combinations = list(combinations(range(n_train, n_train + 20), 2))
         # pick random index (source mesh)
-        self.sidx = random.sample(range(0, n_train), 10)
-        self.fidx = [i for i in range(n_train)] # if i not in self.sidx
+        n_trial = 0 # 17
+        # self.sidx = random.sample(range(0, n_train), n_trial)
+        # ends = [20, 9, 4, 10, 17, 4, 18, 13, 8, 16, 11, 16, 14, 6, 20, 17, 7]
+        ends = [19, 9, 4, 9, 15, 4, 15, 12, 8, 16, 11, 15, 14, 6, 19, 17, 7]
+        self.sidx = []
+        _prev, _end = 0, 0
+        for i in range(len(ends)): # range(0, 1)
+            _prev = _end
+            _end += ends[i]
+            if (_end - _prev) > 7:
+                _num = random.sample(range(_prev, _end), 1) # [200]
+                self.sidx.extend(_num)
+                n_trial += 1
+
+        self.fidx = [i for i in range(n_train) if i not in self.sidx] # if i not in self.sidx
         self.pair = list(product(self.sidx, self.fidx))
         # self.idx = list(range(n_train + 20))
             
@@ -66,7 +80,7 @@ class PSBTestDataset(Dataset):
                     self.gradX_list,
                     self.gradY_list,
                     self.hks_list,
-                    self.vts_list,
+                    # self.vts_list,
                     self.names_list
                 ) = torch.load(load_cache)
                 return
@@ -152,7 +166,7 @@ class PSBTestDataset(Dataset):
                     self.gradX_list,
                     self.gradY_list,
                     self.hks_list,
-                    self.vts_list,
+                    # self.vts_list,
                     self.names_list,
                 ),
                 load_cache,
@@ -175,7 +189,7 @@ class PSBTestDataset(Dataset):
             self.gradX_list[idx1],
             self.gradY_list[idx1],
             self.hks_list[idx1],
-            self.vts_list[idx1],
+            # self.vts_list[idx1],
             self.names_list[idx1],
         ]
 
@@ -190,17 +204,17 @@ class PSBTestDataset(Dataset):
             self.gradX_list[idx2],
             self.gradY_list[idx2],
             self.hks_list[idx2],
-            self.vts_list[idx2],
+            # self.vts_list[idx2],
             self.names_list[idx2],
         ]
 
         # Compute the ground-truth functional map between the pair
-        vts1, vts2 = shape1[10], shape2[10]
+        # vts1, vts2 = shape1[10], shape2[10]
         evec_1, evec_2 = shape1[6][:, :self.n_fmap], shape2[6][:, :self.n_fmap]
-        evec_1_a, evec_2_a = evec_1[vts1,:], evec_2[vts2,:]
-        solve_out = torch.lstsq(evec_2_a, evec_1_a)[0] # TODO replace with torch.linalg version in future torch
-        C_gt = solve_out[:evec_1_a.size(-1)].t()
-        resids = solve_out[evec_1_a.size(-1):]
+        # evec_1_a, evec_2_a = evec_1[vts1,:], evec_2[vts2,:]
+        # solve_out = torch.lstsq(evec_2_a, evec_1_a)[0] # TODO replace with torch.linalg version in future torch
+        # C_gt = solve_out[:evec_1_a.size(-1)].t()
+        # resids = solve_out[evec_1_a.size(-1):]
 
         # Alternately, do it with numpy instead:
         # solve_out = np.linalg.lstsq(toNP(evec_1_a), toNP(evec_2_a), rcond=None)
@@ -209,7 +223,7 @@ class PSBTestDataset(Dataset):
         # resids = torch.tensor(solve_out[1])
         t_src_idx = self.sidx
         
-        return (shape1, shape2, C_gt)
+        return (shape1, shape2) # , C_gt
 
 
     def get_sidx(self):

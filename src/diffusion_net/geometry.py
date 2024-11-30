@@ -24,6 +24,8 @@ import torch.nn as nn
 from collections import defaultdict
 from tqdm import tqdm
 
+import re
+
 
 def norm(x, highdim=False):
     """
@@ -1075,3 +1077,14 @@ def get_bin_fmap(C):
     return (t_func(C_abs)>0.11).int()
 
 
+def equal_class(s1, s2):
+    r1 = re.sub(r'\d+', '', s1)
+    r2 = re.sub(r'\d+', '', s2)
+
+    if r1 == r2:
+        return 1
+    elif (r1 in ('table', 'fourleg') and r2 in ('table', 'fourleg')) or (r1 in ('airplane', 'bird') and r2 in ('airplane', 'bird')):
+        return 0.5
+    else:
+        return 0
+        # return r1 == r2

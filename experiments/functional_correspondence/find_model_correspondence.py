@@ -15,7 +15,7 @@ import torch
 import torch.nn
 from torch.utils.data import DataLoader
 
-from fmaps_model import FunctionalMapCorrespondenceWithDiffusionNetFeatures
+from fmaps_model import FunctionalMapCorrespondenceWithDiffusionNetFeaturesWithoutVts
 
 # add the path to the DiffusionNet src
 sys.path.append(os.path.join(os.path.dirname(__file__), "../../src/"))
@@ -36,8 +36,10 @@ parser.add_argument("--input_features", type=str,
                     help="what features to use as input ('xyz' or 'hks') default: hks", default='hks')
 parser.add_argument("--load_model", type=str,
                     help="path to load a pretrained model from")
-parser.add_argument("--num_test", type=int, default=10,
-                    help="number of test to find similar mesh")
+# parser.add_argument("--num_test", type=int, default=10,
+#                     help="number of test to find similar mesh")
+parser.add_argument("--top_k", type=int, default=3,
+                    help="number of similar model to retrieve")
 # parser.add_argument("--result_path", type=str, help="path to save a result correspondence")
 args = parser.parse_args()
 
@@ -75,6 +77,8 @@ model_save_path = os.path.join(
     base_path, "saved_models/{}_{}.pth".format(args.test_dataset, input_features))
 dataset_path = os.path.join(base_path, "data")
 diffusion_net.utils.ensure_dir_exists(os.path.join(base_path, "saved_models/"))
+# Ground Truth paths
+gt_path = os.path.join(dataset_path, "gt_fmap")
 # Test paths
 test_path = os.path.join(base_path, "test", args.test_dataset)
 t_sim_path = os.path.join(test_path, "sim_model")
@@ -83,7 +87,9 @@ diffusion_net.utils.ensure_dir_exists(t_sim_path)
 
 
 # === Load datasets
-test_dataset = PSBTestDataset(dataset_path, name=args.test_dataset, n_trial=args.num_test,
+# test_dataset = PSBTestDataset(dataset_path, name=args.test_dataset, n_trial=args.num_test,
+#                                 k_eig=k_eig, n_fmap=n_fmap, use_cache=True, op_cache_dir=op_cache_dir)
+test_dataset = PSBTestDataset(dataset_path, name=args.test_dataset,
                                 k_eig=k_eig, n_fmap=n_fmap, use_cache=True, op_cache_dir=op_cache_dir)
 test_loader = torch.utils.data.DataLoader(
     test_dataset, batch_size=None, shuffle=False)
@@ -93,7 +99,7 @@ test_loader = torch.utils.data.DataLoader(
 
 C_in = {'xyz': 3, 'hks': 16}[input_features]  # dimension of input features
 
-model = FunctionalMapCorrespondenceWithDiffusionNetFeatures(
+model = FunctionalMapCorrespondenceWithDiffusionNetFeaturesWithoutVts(
     n_feat=n_feat,
     n_fmap=n_fmap,
     input_features=input_features,
@@ -172,25 +178,33 @@ def test(with_geodesic_error=False):
 
     model.eval()
 
-    losses = []
+    # losses = []
     # geodesic_errors = []
 
     t_src_idx = test_dataset.get_sidx()
     name_list = test_dataset.get_names()
-    min_loss = defaultdict(int) # stores minimum L2 loss of pair model
-    res_name = defaultdict(str) # stores name of min val
+    # min_loss = defaultdict(int) # stores minimum L2 loss of pair model
+    # res_name = defaultdict(str) # stores name of min val
+    n1_idx = defaultdict(lambda: [-1, 0])
+    max_diag = defaultdict(list) # stores C_pred diagonal sum and name2
+
+    # Make torch that saves absolute diagonal sum of source model
+    # sim_score = torch.zeros((args.num_test, 200-args.num_test))
+    num_class = 13 # 13
+    sim_score = torch.zeros((num_class, 200-num_class))
+    
 
     with torch.no_grad():
 
-        fidx = 0
+        cidx = 0
         for data in tqdm(test_loader):
 
             # Get data
-            shape1, shape2, C_gt = data
+            shape1, shape2 = data # , C_gt
             *shape1, name1 = shape1
             *shape2, name2 = shape2
-            shape1, shape2, C_gt = [x.to(device) for x in shape1], [
-                x.to(device) for x in shape2], C_gt.to(device)
+            shape1, shape2 = [x.to(device) for x in shape1], [
+                x.to(device) for x in shape2] # , C_gt / , C_gt.to(device)
 
             verts1_orig = shape1[0]
             if augment_random_rotate:
@@ -201,14 +215,37 @@ def test(with_geodesic_error=False):
             C_pred, feat1, feat2 = model(shape1, shape2)
             C_pred = C_pred.squeeze(0)
 
+            # save C_pred in psb dataset
+
+
             # Loss
-            loss = torch.mean(torch.square(C_pred-C_gt))  # L2 loss
-            losses.append(toNP(loss))
+            # loss = torch.mean(torch.square(C_pred-C_gt))  # L2 loss
+            # losses.append(toNP(loss))
 
             # Update matching model
-            if min_loss[name1] == 0 or min_loss[name1] > loss:
-                min_loss[name1] = loss
-                res_name[name1] = name2
+            # if min_loss[name1] == 0 or min_loss[name1] > loss:
+                # min_loss[name1] = loss
+                # res_name[name1] = name2
+            rprob_corr, cprob_corr = diffusion_net.geometry.get_prob_fmap(C_pred)
+
+            # Calculate Diagonal
+            C_diag_r = rprob_corr.diagonal(0)
+            # C_diag_c = cprob_corr.diagonal(0)
+            dsum_r = C_diag_r.abs().sum() # toNP(C_diag.abs().sum())
+            # dsum_c = C_diag_c.abs().sum()
+            # print(dsum)
+            max_diag[name1].append(name2)
+
+            # set index for source mesh
+            if n1_idx[name1] == [-1, 0]:
+                n1_idx[name1][0] = cidx
+                cidx += 1
+
+            # print("{} {}".format(n1_idx[name1][0], n1_idx[name1][1]))
+            # sim_score[n1_idx[name1][0], n1_idx[name1][1]] = (dsum_r + dsum_c)//2
+            sim_score[n1_idx[name1][0], n1_idx[name1][1]] = dsum_r
+            n1_idx[name1][1] += 1
+
 
             # # Compute the geodesic error in the vertex-to-vertex correspondence
             # if with_geodesic_error:
@@ -310,34 +347,67 @@ def test(with_geodesic_error=False):
                 
             #     fidx += 1
 
-    mean_loss = np.mean(losses)
+    # mean_loss = np.mean(losses)
     # mean_geodesic_error = np.mean(
     #     geodesic_errors) if with_geodesic_error else -1
 
-    return mean_loss, min_loss, res_name #, mean_geodesic_error
+    return sim_score, max_diag, n1_idx # mean_loss, min_loss, , mean_geodesic_error
 
 
-if train:
-    print("Training...")
+# if train:
+#     print("Training...")
 
-    for epoch in range(n_epoch):
-        train_loss = train_epoch(epoch)
-        test_loss, test_geodesic_error = test(with_geodesic_error=True)
-        print("Epoch {} - Train overall: {:.5e}  Test overall: {:.5e}  Test geodesic error: {:.5e}".format(
-            epoch, train_loss, test_loss, test_geodesic_error))
+#     for epoch in range(n_epoch):
+#         train_loss = train_epoch(epoch)
+#         test_loss, test_geodesic_error = test(with_geodesic_error=True)
+#         print("Epoch {} - Train overall: {:.5e}  Test overall: {:.5e}  Test geodesic error: {:.5e}".format(
+#             epoch, train_loss, test_loss, test_geodesic_error))
 
-        print(" ==> saving last model to " + model_save_path)
-        torch.save(model.state_dict(), model_save_path)
+#         print(" ==> saving last model to " + model_save_path)
+#         torch.save(model.state_dict(), model_save_path)
 
 
 # Test
 print("<<Test 3 Start>>")
-mean_loss, pair_loss, pair_name = test(with_geodesic_error=False)
-print("Overall MSE Loss: {:.4}".format(
-    mean_loss))
-_k = list(pair_loss.keys())
+sim_score, max_diag, n1_idx = test(with_geodesic_error=False) # mean_loss, pair_loss, 
+# print("Overall MSE Loss: {:.4}".format(mean_loss))
+_k = list(max_diag.keys())
 count = 0
-for i in range(args.num_test):
-    print("Test{} - closest pair model: {}, loss: {}".format(i+1, pair_name[_k[i]], pair_loss[_k[i]])) # _k[i]
-    count += 1
-print("Evaluated {} out of {} tests, {}%".format(count, args.num_test, count/args.num_test*100))
+sim_score.to(device)
+# print(sim_score)
+# for i in range(args.num_test):
+for i in range(len(_k)):
+    score = 0
+    n1 = _k[i]
+    sim_idx = n1_idx[n1][0] # n1_idx가 sim_idx에서 n1이 차지하는 row, n1열에 값 넣을때 track하는 column임(200)
+    top_k, ind_topk = sim_score[sim_idx].topk(args.top_k)
+    top_k = toNP(top_k)
+    ind_topk = toNP(ind_topk)
+    # print("Test{} Source: {}".format(i+1, n1), end=' ')
+    print("{}:".format(n1), end=' ')
+    # print("Test{} - closest pair model: {}, loss: {}".format(i+1, pair_name[_k[i]], pair_loss[_k[i]])) # _k[i]
+    # t_flag = True
+    diag_n2 = max_diag[n1] # tuple of (value, name2)
+    for j in range(len(top_k)): # args.top_k
+        val = top_k[j]
+        # find name
+        n2 = diag_n2[ind_topk[j]] #[1]
+        # n2 = ''
+        # for k in len(diag_n2):
+        #     if max_diag[n1][k][0] == val:
+        #         n2 = max_diag[n][k][1]
+        #         v_flag = True
+        #         break
+        if j == len(top_k)-1:
+            # print("{}: {:.3}-{}".format(j+1, diag_n2[ind_topk[j]][0], n2))
+            print("{}".format(n2))
+        else:
+            # print("{}: {:.3}-{}".format(j+1, diag_n2[ind_topk[j]][0], n2), end=" ")
+            print("{},".format(n2), end=" ")
+    # t_flag &= v_flag
+    # if t_flag:
+        score += diffusion_net.geometry.equal_class(n1, n2)
+    if score >= args.top_k/2:
+        count += 1
+print("Evaluated {} out of {} tests, {}%".format(count, len(_k), round(count/(len(_k))*100)))
+# print("Evaluated {} out of {} tests, {:.3}%".format(count, len(_k), count/(len(_k))*100))
