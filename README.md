@@ -34,19 +34,45 @@ Torch 버전: 1.8.1\
 Torchvision 버전: 0.9.1
 
 ### 실행 절차:
+1. 도커 이미지를 다운로드 한다.
 ```python
-docker pull icebear86/starlab_image:prev
+docker pull icebear86/starlab:2.0
 ```
 
-1. 도커를 킨다 (mount 추가해야함).
+2. Mount하고 싶은 위치에 디렉토리를 만든다.
 ```python
-docker run --gpus all -it --name starlab11.1 starlab_image:prev
-docker start starlab11.1[지정한 도커의 이름]
-docker attach starlab11.1[지정한 도커의 이름]
-su - staruser[사용자 이름]
+mkdir starlab
 ```
 
-2. 아래 명령어를 입력하면 실험이 실행된다.
+3. data.zip(https://drive.google.com/file/d/1IFqje9OL0-BkvcVxiJAQfNs_ZQJJzZ7G/view?usp=sharing)을 다운받고, 압축해제 시킨다.
 ```python
-bash starlab_test.sh
+unzip data.zip
+rm -rvf data.zip
+```
+
+4. 도커를 킨다.
+```python
+docker run --gpus all -it -v /home/[username]/starlab:/home/staruser --name starlab11.1 starlab_image:2.0
+docker start starlab11.1
+docker attach starlab11.1
+```
+
+5. 해당 git을 clone한다.
+```python
+git clone https://github.com/wooriel/func_corr.git
+```
+
+6. mount된 폴더 안의 data를 올바른 위치로 이동시킨다.
+```python
+mv ./data func_corr/functional_correspondence
+```
+
+7. Depencencies들을 다운로드 한다.
+```python
+python convert.py
+```
+
+8. 아래 명령어를 입력하면 실험이 실행된다.
+```python
+./starlab_test.sh
 ```

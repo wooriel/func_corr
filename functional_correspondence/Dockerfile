@@ -20,17 +20,14 @@ RUN apt-get install -y python3.10 python3-pip && \
 # Set Python3 as the default Python
 RUN ln -s /usr/bin/python3 /usr/bin/python
 
-# Verify Python installation
-RUN python --version
-
 # Install git
 RUN apt-get install -y git
 
 # Install torch
 RUN pip install torch==1.8.1+cu111 torchvision==0.9.1+cu111 torchaudio==0.8.1 -f https://download.pytorch.org/whl/torch_stable.html
 
-# Install libigl
-RUN pip install libigl
+# Install pyyaml
+RUN pip install pyyaml
 
 # Add a user named staruser
 RUN adduser --disabled-password --gecos "" staruser
