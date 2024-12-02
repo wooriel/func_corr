@@ -39,19 +39,15 @@ Torchvision 버전: 0.9.1
 docker pull icebear86/starlab_image:prev
 ```
 
-1. 도커를 킨다.\
+1. 도커를 킨다 (mount 추가해야함).
 ```python
+docker run --gpus all -it --name starlab11.1 starlab_image
 docker start difnet11.1[지정한 도커의 이름]
 docker attach difnet11.1[지정한 도커의 이름]
 su - staruser[사용자 이름]
 ```
 
-2. 소스코드 workspace/func_corr으로 들어간다.\
-```python
-cd ../..\
-cd workspace/func_corr
-```
-3. 아래 명령어를 입력하면 실험이 실행된다.\
+2. 아래 명령어를 입력하면 실험이 실행된다.
 ```python
 bash starlab_test.sh
 ```
