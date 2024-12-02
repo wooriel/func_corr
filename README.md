@@ -21,10 +21,6 @@ Princeton Shape Benchmark를 리메싱 하여 총 200개의 모델을 사용하�
 임의의 모델들을 전체의 3프로 이상을 차지하는 클래스 마다 한 모델씩 총 13개를 뽑아 모델 쌍을 만들어 오차를 측정하고, 일치도가 높은 모델을 리스트 형식으로 추출하였다.\
 검출율이 90프로 이상이 되는지 확인하였다.
 
-### 시스템에 미리 설치해야 할것:
-도커 파일: https://drive.google.com/file/d/1QsGliMdCpD1HTeP2VIKVMNoINXStLV4P/view?usp=sharing \
-데이터 파일: https://drive.google.com/file/d/1IFqje9OL0-BkvcVxiJAQfNs_ZQJJzZ7G/view?usp=sharing
-
 ### 실행 환경:
 GPU버전: NVIDIA GeForce RTX 3090 Ti\
 운영체제: ubuntu20.04\
