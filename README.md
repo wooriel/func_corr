@@ -40,9 +40,9 @@ docker pull icebear86/starlab_image:prev
 
 1. 도커를 킨다 (mount 추가해야함).
 ```python
-docker run --gpus all -it --name starlab11.1 starlab_image
-docker start difnet11.1[지정한 도커의 이름]
-docker attach difnet11.1[지정한 도커의 이름]
+docker run --gpus all -it --name starlab11.1 starlab_image:prev
+docker start starlab11.1[지정한 도커의 이름]
+docker attach starlab11.1[지정한 도커의 이름]
 su - staruser[사용자 이름]
 ```
 
