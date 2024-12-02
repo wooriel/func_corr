@@ -16,14 +16,13 @@ Binary Correspondence: 두 모델 사이의 basis의 대응을 행렬로 나타�
 Ground truth 측지 거리와 새로 계산한 모델간의 점 끼리의 측지 거리 사이의 오차를 계산하였다.\
 측지 거리는normalize(정규화) 시킨 후 100을 곱하여 퍼센트로 나타내었으며, 총 190개 모델 pair(쌍)의 측지 오차값의 평균이 5프로 이내가 되는지 확인하였다.
 
-###
-실험 3) 3차원 모델 일치도 측정율 90% 이상
+### 실험 3) 3차원 모델 일치도 측정율 90% 이상
 Princeton Shape Benchmark를 리메싱 하여 총 200개의 모델을 사용하였다.\
 임의의 모델들을 전체의 3프로 이상을 차지하는 클래스 마다 한 모델씩 총 13개를 뽑아 모델 쌍을 만들어 오차를 측정하고, 일치도가 높은 모델을 리스트 형식으로 추출하였다.\
 검출율이 90프로 이상이 되는지 확인하였다.
 
 ### 시스템에 미리 설치해야 할것:
-도커 파일: https://drive.google.com/file/d/1QsGliMdCpD1HTeP2VIKVMNoINXStLV4P/view?usp=sharing
+도커 파일: https://drive.google.com/file/d/1QsGliMdCpD1HTeP2VIKVMNoINXStLV4P/view?usp=sharing\
 데이터 파일: https://drive.google.com/file/d/1IFqje9OL0-BkvcVxiJAQfNs_ZQJJzZ7G/view?usp=sharing
 
 ### 실행 환경:
