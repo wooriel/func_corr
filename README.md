@@ -44,7 +44,7 @@ docker pull icebear86/starlab:2.0
 mkdir starlab
 ```
 
-3. data.zip(https://drive.google.com/file/d/1IFqje9OL0-BkvcVxiJAQfNs_ZQJJzZ7G/view?usp=sharing)을 다운받고, 압축해제 시킨다.
+3. [data.zip](https://drive.google.com/file/d/1IFqje9OL0-BkvcVxiJAQfNs_ZQJJzZ7G/view?usp=sharing)을 다운받고, 압축해제 시킨다.
 ```python
 unzip data.zip
 rm -rvf data.zip
@@ -52,7 +52,7 @@ rm -rvf data.zip
 
 4. 도커를 킨다.
 ```python
-docker run --gpus all -it -v /home/[username]/starlab:/home/staruser --name starlab11.1 starlab_image:2.0
+docker run --gpus all -it -v /home/[username]/starlab:/home/staruser --name starlab11.1 icebear86/starlab:2.0
 docker start starlab11.1
 docker attach starlab11.1
 ```
@@ -70,6 +70,11 @@ mv ./data func_corr/functional_correspondence
 7. Depencencies들을 다운로드 한다.
 ```python
 python convert.py
+```
+
+8. torch를 다운로드 한다.
+```python
+pip install torch==1.8.1+cu111 torchvision==0.9.1+cu111 torchaudio==0.8.1 -f https://download.pytorch.org/whl/torch_stable.html
 ```
 
 8. 아래 명령어를 입력하면 실험이 실행된다.
