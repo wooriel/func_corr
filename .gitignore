@@ -10,9 +10,9 @@ __pycache__/
 # Test things
 test/*.obj
 test/*.ply
-experiments/functional_correspondence/test/
-experiments/data/psb/off_2_not_used/
-experiments/data/psb/corres_not_used/
+functional_correspondence/test/
+data/psb/off_2_not_used/
+data/psb/corres_not_used/
 
 # Editor and OS things
 imgui.ini

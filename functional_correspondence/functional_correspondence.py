@@ -236,31 +236,18 @@ def test(with_geodesic_error=False):
                     if fidx == 0:
                         print("<<Test 1: Save 4 Different Shape Correspondence>>")
                         print("1-1) Saving Injective Correspondence...")
-                        # print(vts2.size())
-                    # print("<<Test 1: Save 4 Different Shape Correspondence>>")
-                    # print("1-1) Saving Injective Correspondence...")
                     inj_label = diffusion_net.utils.toNP(pred_labels2to1)
-                    fname_lab1 = os.path.join(t_inj_path, "{0}{1}.vts".format(name1, str(fidx).zfill(3)))
+                    fname_lab1 = os.path.join(t_inj_path, "label_{0}_to_{1}.vts".format(name2[-3:], name1[-3:]))
                     np.savetxt(fname_lab1, inj_label+1, fmt='%d')
 
-                    inj_sh1 = diffusion_net.utils.toNP(vts2on1)
-                    inj_sh2 = diffusion_net.utils.toNP(vts2)
-                    inj_gt1 = diffusion_net.utils.toNP(vts1)
-                    fname_lab1_1 = os.path.join(t_inj_path, "{0}{1}.vts".format(name1, str(fidx).zfill(3)))
-                    fname_lab1_2 = os.path.join(t_inj_path, "{0}{1}.vts".format(name2, str(fidx).zfill(3)))
-                    fname_lab1_3 = os.path.join(t_inj_path, "{0}gt1{1}.vts".format(name1, str(fidx).zfill(3)))
-                    np.savetxt(fname_lab1_1, inj_sh1+1, fmt='%d')
-                    np.savetxt(fname_lab1_2, inj_sh2+1, fmt='%d')
-                    np.savetxt(fname_lab1_3, inj_gt1+1, fmt='%d')
-
-                    corr_pair = diffusion_net.utils.toNP(vts2on1)
-                    fname_1 = os.path.join(t_inj_path, "tr_reg_{0}.vts".format(str(fidx).zfill(3)))
-                    np.savetxt(fname_1, corr_pair, fmt='%d')
+                    inj_pair = diffusion_net.utils.toNP(vts2on1)
+                    fname_1 = os.path.join(t_inj_path, "inj_{0}_on_{1}.vts".format(name2[-3:], name1[-3:]))
+                    np.savetxt(fname_1, inj_pair+1, fmt='%d')
                     if fidx == 0:
                         print("1-1) Injective Correspondence Saved on {}".format(t_inj_path))
 
                     # 1-2) Save bijective correspondence
-                    if fidx == 0:
+                    if fidx == -1:
                         print("1-2) Saving Bijective Correspondence...")
                         # print(shape1[0].size(0))
                         # print(shape2[0].size(0))
@@ -269,15 +256,15 @@ def test(with_geodesic_error=False):
                             evec2[:, :n_fmap], evec1_on_2, k=lab_len, method='brute')
                         bij_labels2to1 = bij_labels2to1.squeeze(-1)
                         bij_label = diffusion_net.utils.toNP(bij_labels2to1)
-                        fname_lab2 = os.path.join(t_bij_path, "{0}_to_{1}_label{2}.vts".format(name2, name1, str(fidx).zfill(3)))
-                        np.savetxt(fname_lab2, bij_label, fmt='%d')
+                        fname_lab2 = os.path.join(t_bij_path, "label_{0}_to_{1}.vts".format(name2[-3:], name1[-3:]))
+                        np.savetxt(fname_lab2, bij_label+1, fmt='%d')
 
                         bij_vts2 = vts2.squeeze(-1)
-                        bij_vts2 = bij_vts2.clamp(min=0, max=lab_len-1)
+                        bij_vts2 = bij_vts2.clamp(min=0, max=lab_len-1) # due to scape
                         bij_vts2 = bij_vts2.unsqueeze(1)
                         bij_vts2on1 = bij_labels2to1[bij_vts2]
                         bij_pair = diffusion_net.utils.toNP(bij_vts2on1)
-                        fname_2 = os.path.join(t_bij_path, "{0}{1}.vts".format(name1, str(fidx).zfill(3)))
+                        fname_2 = os.path.join(t_bij_path, "bij_{0}_on_{1}.vts".format(name2[-3:], name1[-3:]))
                         np.savetxt(fname_2, bij_pair+1, fmt='%d')
                         print("1-2) Bijective Correspondence Saved on {}".format(t_bij_path))
 
