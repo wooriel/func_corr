@@ -50,8 +50,6 @@ rm -rvf data.zip
 4. 도커를 킨다.
 ```python
 docker run --gpus all -it -v /home/[username]/starlab:/home/staruser --name starlab11.1 icebear86/starlab:2.0
-docker start starlab11.1
-docker attach starlab11.1
 ```
 
 5. 해당 git을 clone한다.
@@ -66,6 +64,7 @@ mv ./data func_corr/functional_correspondence
 
 7. Depencencies들을 다운로드 한다.
 ```python
+cd func_corr
 python convert.py
 ```
 

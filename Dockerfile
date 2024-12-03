@@ -27,7 +27,7 @@ RUN apt-get install -y git
 # RUN pip install torch==1.8.1+cu111 torchvision==0.9.1+cu111 torchaudio==0.8.1 -f https://download.pytorch.org/whl/torch_stable.html
 
 # Install pyyaml
-RUN pip install pyyaml
+RUN pip install libigl pyyaml
 
 # Add a user named staruser
 RUN adduser --disabled-password --gecos "" staruser
