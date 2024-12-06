@@ -145,6 +145,14 @@ def test(with_geodesic_error=False):
 
             rprob_corr, cprob_corr = diffusion_net.geometry.get_prob_fmap(C_pred)
 
+            rprob_corr, cprob_corr = diffusion_net.geometry.get_prob_fmap(C_pred)
+            C_rprob = diffusion_net.utils.toNP(rprob_corr)
+            # C_cprob = diffusion_net.utils.toNP(cprob_corr)
+            fname_3r = os.path.join(t_sim_path, "pfmap_r{0}_to_{1}.vts".format(name1[-3:], name2[-3:]))
+            # fname_3c = os.path.join(t_prob_path, "{0}pfmap_c{1}.vts".format(name1[-3:], name2[-3:]))
+            np.savetxt(fname_3r, C_rprob, fmt='%1.3f')
+            # np.savetxt(fname_3c, C_cprob, fmt='%1.3f')
+
             # Calculate Diagonal
             C_diag_r = rprob_corr.diagonal(0)
             dsum_r = C_diag_r.abs().sum()
