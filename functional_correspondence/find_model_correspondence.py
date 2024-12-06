@@ -8,6 +8,8 @@ import random
 from tqdm import tqdm
 import numpy as np
 from collections import defaultdict
+import logging
+import time
 
 import torch
 import torch.nn
@@ -64,11 +66,20 @@ augment_random_rotate = (input_features == 'xyz')
 base_path = os.path.dirname(__file__)
 op_cache_dir = os.path.join(base_path, "data", args.test_dataset, "op_cache")
 dataset_path = os.path.join(base_path, "data")
+# Current time
+loc_time = time.localtime()
+ftime = time.strftime("%Y-%m-%d_%H:%M", loc_time)
 # Test paths
 test_path = os.path.join(base_path, "test", args.test_dataset)
-t_sim_path = os.path.join(test_path, "sim_model")
+t_sim_path = os.path.join(test_path, "sim_model", ftime)
 diffusion_net.utils.ensure_dir_exists(os.path.join(base_path, "test/"))
 diffusion_net.utils.ensure_dir_exists(t_sim_path)
+
+# configure log path
+logging.basicConfig(
+    filename = os.path.join(t_sim_path, "log{}.log".format(ftime)),
+    level = logging.INFO
+)
 
 
 # === Load datasets
@@ -148,8 +159,8 @@ def test(with_geodesic_error=False):
             rprob_corr, cprob_corr = diffusion_net.geometry.get_prob_fmap(C_pred)
             C_rprob = diffusion_net.utils.toNP(rprob_corr)
             # C_cprob = diffusion_net.utils.toNP(cprob_corr)
-            fname_3r = os.path.join(t_sim_path, "pfmap_r{0}_to_{1}.vts".format(name1[-3:], name2[-3:]))
-            # fname_3c = os.path.join(t_prob_path, "{0}pfmap_c{1}.vts".format(name1[-3:], name2[-3:]))
+            fname_3r = os.path.join(t_sim_path, "pfmap_r{0}_to_{1}.vts".format(name1, name2))
+            # fname_3c = os.path.join(t_prob_path, "{0}pfmap_c{1}.vts".format(name1, name2))
             np.savetxt(fname_3r, C_rprob, fmt='%1.3f')
             # np.savetxt(fname_3c, C_cprob, fmt='%1.3f')
 
@@ -185,6 +196,7 @@ for i in range(len(_k)):
     top_k = toNP(top_k)
     ind_topk = toNP(ind_topk)
     print("Test {}-{}:".format(i+1, n1), end=' ')
+    logging.info("Test {}-{}: ".format(i+1, n1))
     diag_n2 = max_diag[n1] # list of name2
     for j in range(len(top_k)):
         val = top_k[j]
@@ -192,13 +204,16 @@ for i in range(len(_k)):
         n2 = diag_n2[ind_topk[j]]
         if j == len(top_k)-1:
             print("{}".format(n2))
+            logging.info("{}".format(n2))
         else:
             print("{},".format(n2), end=" ")
+            logging.info("{}, ".format(n2))
         score += diffusion_net.geometry.equal_class(n1, n2)
     if score >= args.top_k/2:
         count += 1
 percent = round(count/(len(_k))*100)
 print("Evaluated {} out of {} tests, {}%".format(count, len(_k), percent))
+logging.info("Evaluated {} out of {} tests, {}%".format(count, len(_k), percent))
 if percent >= 90:
     print("PASS")
 else:

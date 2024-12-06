@@ -294,7 +294,7 @@ def test(with_geodesic_error=False):
                     print("1-4) Saving Binary Correspondence...")
                 bin_corr = diffusion_net.geometry.get_bin_fmap(C_pred)
                 C_bin = diffusion_net.utils.toNP(bin_corr)
-                fname_4 = os.path.join(t_bin_path, "bfmap_{0}_to_{1}.vts".format(name1[-3:], name2[-3:])
+                fname_4 = os.path.join(t_bin_path, "bfmap_{0}_to_{1}.vts".format(name1[-3:], name2[-3:]))
                 np.savetxt(fname_4, C_bin, fmt='%d')
                 if fidx == 0:
                     print("1-4) Binary Correspondence Saved on {}".format(t_bin_path))
