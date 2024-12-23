@@ -1,20 +1,23 @@
-from psb_dataset import PSBTestDataset
-from diffusion_net.utils import toNP
-import diffusion_net
+import numpy as np
+import torch
+import random
+
+SEED = 2024
+random.seed(SEED)
+np.random.seed(SEED)
+torch.manual_seed(SEED)
+
 import os
 import sys
 import argparse
-import random
 from tqdm import tqdm
-import numpy as np
 from collections import defaultdict
 import logging
 import time
-
-import torch
 import torch.nn
-from torch.utils.data import DataLoader
-
+from psb_dataset import PSBTestDataset
+from diffusion_net.utils import toNP
+import diffusion_net
 from fmaps_model import FunctionalMapCorrespondenceWithDiffusionNetFeaturesWithoutVts
 
 # add the path to the DiffusionNet src

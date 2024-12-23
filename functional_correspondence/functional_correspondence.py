@@ -1,17 +1,20 @@
-from faust_scape_dataset import FaustScapeDataset
-from diffusion_net.utils import toNP
-import diffusion_net
+import numpy as np
+import torch
+import random
+
+SEED = 2024
+random.seed(SEED)
+np.random.seed(SEED)
+torch.manual_seed(SEED)
+
 import os
 import sys
 import argparse
-import random
 from tqdm import tqdm
-import numpy as np
-
-import torch
 import torch.nn
-from torch.utils.data import DataLoader
-
+from faust_scape_dataset import FaustScapeDataset
+from diffusion_net.utils import toNP
+import diffusion_net
 from fmaps_model import FunctionalMapCorrespondenceWithDiffusionNetFeatures
 
 # add the path to the DiffusionNet src
