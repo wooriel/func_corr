@@ -41,7 +41,7 @@ parser.add_argument("--top_k", type=int, default=2,
 args = parser.parse_args()
 
 # system things
-device = torch.device('cuda')
+device = torch.device('cpu')
 dtype = torch.float32
 
 # model
