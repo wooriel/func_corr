@@ -106,7 +106,7 @@ model = model.to(device)
 if args.load_model:
     # load the pretrained model
     print("Loading pretrained model from: " + str(args.load_model))
-    model.load_state_dict(torch.load(args.load_model))
+    model.load_state_dict(torch.load(args.load_model, map_location=device))
     print("...done")
 
 if args.evaluate and not args.load_model:
